@@ -1,34 +1,20 @@
-name: Spring Boot Application CI/CD with Postgres
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: [ "main", "develop" ]
   pull_request:
     branches: [ "main" ]
 
 jobs:
-  build:
+  # Job 1: Run Unit and Integration Tests
+  test:
+    name: Run Tests
     runs-on: ubuntu-latest
 
-    # This spins up Postgres so your Integration Tests can run
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_DB: webapp_test
-          POSTGRES_PASSWORD: password
-          POSTGRES_USER: postgres
-        ports:
-          - 5432:5432
-        # Wait until postgres is ready before starting the job
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -37,10 +23,82 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Run Tests with Maven
-        run: mvn clean test
-        env:
-          # Override properties so Spring connects to the GitHub Postgres service
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/webapp_test
-          SPRING_DATASOURCE_USERNAME: postgres
-          SPRING_DATASOURCE_PASSWORD: password
+      - name: Run Tests
+        run: ./mvnw verify -Dspring.profiles.active=test -B
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: target/surefire-reports/
+
+  # Job 2: Build Application
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: ./mvnw package -DskipTests -B
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: target/*.jar
+
+  # Job 3: Build Docker Image
+  docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+          path: target/
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          load: true
+          tags: student-management:${{ github.sha }}
+
+      # Optional: Push to Docker Hub (uncomment and add secrets)
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
+      #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      #
+      # - name: Push to Docker Hub
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: .
+      #     push: true
+      #     tags: |
+      #       ${{ secrets.DOCKER_USERNAME }}/student-management:latest
+      #       ${{ secrets.DOCKER_USERNAME }}/student-management:${{ github.sha }}

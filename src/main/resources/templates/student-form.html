@@ -1,21 +1,46 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
+    <meta charset="UTF-8">
     <title>Student Form</title>
 </head>
 <body>
-
-<h2>Enter Student Info</h2>
-
-<form th:action="@{/students/store}" th:object="${student}" method="post">
-    <label>Name:</label>
-    <input type="text" th:field="*{name}" /><br/><br/>
-
-    <label>Roll:</label>
-    <input type="text" th:field="*{roll}" /><br/><br/>
-
-    <button type="submit">Submit</button>
-</form>
-
+    <h2 th:text="${student.id != null ? 'Edit Student' : 'Add Student'}">Student Form</h2>
+    
+    <nav>
+        <a th:href="@{/students}">Students</a> | 
+        <a th:href="@{/departments}">Departments</a> | 
+        <a th:href="@{/courses}">Courses</a>
+    </nav>
+    
+    <hr/>
+    
+    <form th:action="${student.id != null ? '/students/update/' + student.id : '/students/store'}" 
+          th:object="${student}" method="post">
+        
+        <label>Name:</label>
+        <input type="text" th:field="*{name}" required /><br/><br/>
+        
+        <label>Roll:</label>
+        <input type="text" th:field="*{roll}" required /><br/><br/>
+        
+        <label>Department:</label>
+        <select th:field="*{departmentId}">
+            <option value="">-- Select Department --</option>
+            <option th:each="dept : ${departments}" 
+                    th:value="${dept.id}" 
+                    th:text="${dept.name}"></option>
+        </select><br/><br/>
+        
+        <label>Courses:</label>
+        <select th:field="*{courseIds}" multiple="multiple">
+            <option th:each="course : ${courses}" 
+                    th:value="${course.id}" 
+                    th:text="${course.name}"></option>
+        </select><br/><br/>
+        
+        <button type="submit">Save</button>
+        <a th:href="@{/students}">Cancel</a>
+    </form>
 </body>
 </html>

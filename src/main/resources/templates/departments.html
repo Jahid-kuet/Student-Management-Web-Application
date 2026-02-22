@@ -2,10 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title>Students</title>
+    <title>Departments</title>
 </head>
 <body>
-    <h2>Students</h2>
+    <h2>Departments</h2>
     
     <p>Logged in as: <span sec:authentication="name"></span> | 
        Role: <span sec:authentication="principal.authorities"></span> |
@@ -20,9 +20,9 @@
     
     <hr/>
     
-    <!-- Only TEACHER and AUTHORITY can add students -->
+    <!-- Only TEACHER and AUTHORITY can add departments -->
     <div sec:authorize="hasAnyRole('TEACHER', 'AUTHORITY')">
-        <a th:href="@{/students/add}">Add New Student</a>
+        <a th:href="@{/departments/add}">Add New Department</a>
     </div>
     
     <table border="1">
@@ -30,20 +30,18 @@
             <tr>
                 <th>ID</th>
                 <th>Name</th>
-                <th>Roll</th>
-                <th>Department</th>
+                <th>Description</th>
                 <th sec:authorize="hasAnyRole('TEACHER', 'AUTHORITY')">Actions</th>
             </tr>
         </thead>
         <tbody>
-            <tr th:each="student : ${students}">
-                <td th:text="${student.id}"></td>
-                <td th:text="${student.name}"></td>
-                <td th:text="${student.roll}"></td>
-                <td th:text="${student.department != null ? student.department.name : 'N/A'}"></td>
+            <tr th:each="department : ${departments}">
+                <td th:text="${department.id}"></td>
+                <td th:text="${department.name}"></td>
+                <td th:text="${department.description}"></td>
                 <td sec:authorize="hasAnyRole('TEACHER', 'AUTHORITY')">
-                    <a th:href="@{/students/edit/{id}(id=${student.id})}">Edit</a> | 
-                    <a th:href="@{/students/delete/{id}(id=${student.id})}" onclick="return confirm('Are you sure?')">Delete</a>
+                    <a th:href="@{/departments/edit/{id}(id=${department.id})}">Edit</a> | 
+                    <a th:href="@{/departments/delete/{id}(id=${department.id})}" onclick="return confirm('Are you sure?')">Delete</a>
                 </td>
             </tr>
         </tbody>
