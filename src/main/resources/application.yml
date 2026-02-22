@@ -5,7 +5,6 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-
     url: jdbc:postgresql://localhost:5432/admindb
     username: admin
     password: admin
@@ -13,7 +12,18 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+    show-sql: false
 
   docker:
     compose:
       enabled: false
+
+# Actuator configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized

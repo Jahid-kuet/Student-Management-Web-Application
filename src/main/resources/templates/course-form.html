@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Course Form</title>
+</head>
+<body>
+    <h2 th:text="${course.id != null ? 'Edit Course' : 'Add Course'}">Course Form</h2>
+    
+    <nav>
+        <a th:href="@{/students}">Students</a> | 
+        <a th:href="@{/departments}">Departments</a> | 
+        <a th:href="@{/courses}">Courses</a>
+    </nav>
+    
+    <hr/>
+    
+    <form th:action="${course.id != null ? '/courses/update/' + course.id : '/courses/store'}" 
+          th:object="${course}" method="post">
+        
+        <label>Code:</label>
+        <input type="text" th:field="*{code}" required /><br/><br/>
+        
+        <label>Name:</label>
+        <input type="text" th:field="*{name}" required /><br/><br/>
+        
+        <label>Description:</label>
+        <textarea th:field="*{description}"></textarea><br/><br/>
+        
+        <label>Credits:</label>
+        <input type="number" th:field="*{credits}" /><br/><br/>
+        
+        <button type="submit">Save</button>
+        <a th:href="@{/courses}">Cancel</a>
+    </form>
+</body>
+</html>
